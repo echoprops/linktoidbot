@@ -1,0 +1,68 @@
+#!/bin/sh
+SUCESS_EXIT () 
+    { exit 0; }
+NO_SUCESS_EXIT () 
+    { exit 1; }
+
+clear_files ()
+{   rm -rf  "./src/*.pyc";
+    rm -rf  "./src/*.pyo";
+    rm -rf  "./.env";
+    rm -rfd "./src/__pycache__";
+    rm -rf  "pip-log.txt";
+    rm -rf  "pip-delete-this-directory.txt"; }
+
+show_help () 
+{   echo -e "usage: suggs <args> ...\n";
+    echo -e "suggs create-env <my-token>";
+    echo -e "is for creating env files with your token.\n";
+    echo -e "suggs clean";
+    echo -e "this command will delete env files, pycache and anything else except bot important files and code.\n";
+    echo -e "suggs pull";
+    echo -e "this command will install all bot dependencies via pip3\n";
+    echo -e "suggs execute";
+    echo -e "run the bot directly, more practical than "python3 link_to_id_bot.py" or "./link_to_id_bot.py".\n";
+    echo -e "suggs help";
+    echo -e "show this help page :D\n"; }
+# commands
+if [ "$1" == "create-env" ]; then
+    # check if .env exists
+    if [ -e ./.env ]; then
+        echo ".env file already exists, use it like this or delete it using "suggs clean" without quotes.";
+        NO_SUCESS_EXIT;
+    else
+        echo "creating the .env file...";
+        echo "export __BOT_TOKEN=$2" >> ./.env || echo "There was a failure when trying to create, please check the file permissions and see if your user currently has write permissions on the current folder." && NO_SUCESS_EXIT;
+        source .env
+        SUCESS_EXIT;
+    fi
+elif [ "$1" == "help" ] || [ "$1" == "" ]; then
+    show_help;
+    SUCESS_EXIT;
+elif [ "$1" == "clean" ]; then
+    echo -e "cleaning files...";
+    clear_files || echo -e "Failed to delete some or all of the files, check that your permissions are sufficient or that the files are protected or being used by other processes." && NO_SUCESS_EXIT;
+    echo "done.";
+    SUCESS_EXIT;
+elif [ "$1" == "pull" ]; then
+    if ! command -v pip3 > /dev/null 2>&1; then
+        echo "pip3 does not installed, please install it before and try again.";
+        NO_SUCESS_EXIT;
+    else
+        pip3 install pytelegrambotapi --upgrade || echo "fail to execute pip3 and install." && NO_SUCESS_EXIT;
+        SUCESS_EXIT;
+    fi
+elif [ "$1" == "execute" ]; then
+    if ! command -v python3 > /dev/null 2>&1; then
+        echo "python does not installed, please install it before and try again.";
+        NO_SUCESS_EXIT;
+    else
+        #chmod +x ./src/link_to_id_bot.py || echo "fail to chmod file, check that your permissions are sufficient or that the files are protected or being used by other processes." && NO_SUCESS_EXIT;
+        source ./.env || echo "please create a .env file, use suggs create-env <YOUR_TOKEN>." && NO_SUCESS_EXIT;
+        #por algum motivo o script dá erro nessa linha abaixo e não funciona, sem retornar mensagens de erro apenas um exit/return 1 normal
+        python3 ./src/link_to_id_bot.py || echo "fail to execute bot, please check if bot script exists or if you have enough permissions to run the bot file." && NO_SUCESS_EXIT;
+        SUCESS_EXIT;
+    fi
+else
+    echo -e "invalid command, try using \"suggs help\" without quotes for help.";
+fi
